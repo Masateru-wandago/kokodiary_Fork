@@ -71,14 +71,15 @@ export default function DiaryView() {
   // Check if user is the owner of the diary
   console.log("User data:", user);
   console.log("Diary data:", diary);
-  console.log("User ID:", user?.id);
+  console.log("User ID:", user?._id);
   console.log("Diary userId:", diary?.userId?._id);
   
   // Get the diary user ID, handling both object and string cases
   const diaryUserId = diary?.userId?._id || diary?.userId;
   
-  // Convert both IDs to strings for comparison
-  const isOwner = !!user && !!diaryUserId && diaryUserId.toString() === user.id.toString();
+  // Convert both IDs to strings for comparison with additional null checks
+  const isOwner = !!user && !!user._id && !!diaryUserId && 
+    diaryUserId.toString() === user._id.toString();
   console.log("Diary userId for comparison:", diaryUserId);
   console.log("Is owner:", isOwner);
 
