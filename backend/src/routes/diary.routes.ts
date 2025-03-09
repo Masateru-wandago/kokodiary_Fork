@@ -49,6 +49,49 @@ router.get('/public', async (req: Request, res: Response) => {
   }
 });
 
+// @route   GET /api/diaries/share/:id
+// @desc    Get a shared diary by ID without authentication
+// @access  Public
+router.get(
+  '/share/:id',
+  [param('id').isMongoId().withMessage('Invalid diary ID')],
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const diary = await Diary.findById(req.params.id).populate(
+        'userId',
+        'username'
+      );
+
+      if (!diary) {
+        return res.status(404).json({ message: 'Diary not found' });
+      }
+
+      // Only allow access to public diaries
+      if (!diary.isPublic) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+
+      // Process content to handle secret spoilers (never show secrets in shared view)
+      const processedContent = processContent(diary.content, false);
+      
+      const result = {
+        ...diary.toObject(),
+        content: processedContent
+      };
+
+      res.json(result);
+    } catch (error) {
+      console.error('Get shared diary error:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+);
+
 // @route   GET /api/diaries/search
 // @desc    Search user's diaries
 // @access  Private

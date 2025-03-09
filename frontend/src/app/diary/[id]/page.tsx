@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
-import { FiEdit, FiTrash2, FiArrowLeft } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiArrowLeft, FiShare2 } from 'react-icons/fi';
 import { useAuth } from '@/context/AuthContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import MarkdownPreview from '@/components/diary/MarkdownPreview';
@@ -25,6 +25,8 @@ export default function DiaryView() {
   const [diary, setDiary] = useState<Diary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [showShareToast, setShowShareToast] = useState(false);
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   const params = useParams();
@@ -117,6 +119,23 @@ export default function DiaryView() {
     router.back();
   };
 
+  const handleShare = () => {
+    if (!diary || !diary.isPublic) return;
+    
+    const shareLink = `${window.location.origin}/share/${diaryId}`;
+    setShareUrl(shareLink);
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(shareLink)
+      .then(() => {
+        setShowShareToast(true);
+        setTimeout(() => setShowShareToast(false), 3000);
+      })
+      .catch(err => {
+        console.error('Failed to copy share link:', err);
+      });
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -157,24 +176,35 @@ export default function DiaryView() {
             <FiArrowLeft className="mr-2 -ml-1 h-5 w-5" />
             戻る
           </button>
-          {isOwner && (
-            <div className="flex space-x-2">
+          <div className="flex space-x-2">
+            {diary.isPublic && (
               <button
-                onClick={handleEdit}
-                className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                onClick={handleShare}
+                className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600"
               >
-                <FiEdit className="mr-2 -ml-1 h-5 w-5" />
-                編集
+                <FiShare2 className="mr-2 -ml-1 h-5 w-5" />
+                共有
               </button>
-              <button
-                onClick={handleDelete}
-                className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                <FiTrash2 className="mr-2 -ml-1 h-5 w-5" />
-                削除
-              </button>
-            </div>
-          )}
+            )}
+            {isOwner && (
+              <>
+                <button
+                  onClick={handleEdit}
+                  className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  <FiEdit className="mr-2 -ml-1 h-5 w-5" />
+                  編集
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  <FiTrash2 className="mr-2 -ml-1 h-5 w-5" />
+                  削除
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
@@ -206,6 +236,13 @@ export default function DiaryView() {
           </div>
         </div>
       </div>
+      
+      {/* Share toast notification */}
+      {showShareToast && (
+        <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-md shadow-lg">
+          共有リンクがコピーされました
+        </div>
+      )}
     </DashboardLayout>
   );
 }
