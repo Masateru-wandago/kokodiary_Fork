@@ -38,12 +38,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       active: pathname === '/diary' || pathname?.startsWith('/diary/'),
     },
     {
-      name: '公開日記',
-      href: '/public',
-      icon: <FiUsers className="mr-3 h-5 w-5" />,
-      active: pathname === '/public',
-    },
-    {
       name: '検索',
       href: '/search',
       icon: <FiSearch className="mr-3 h-5 w-5" />,

@@ -12,7 +12,10 @@ interface Diary {
   title: string;
   content: string;
   isPublic: boolean;
-  userId: string;
+  userId: {
+    _id: string;
+    username?: string;
+  } | string;
 }
 
 export default function EditDiary() {
@@ -24,6 +27,11 @@ export default function EditDiary() {
   const params = useParams();
   const diaryId = params?.id as string;
 
+  console.log('Edit Diary Page - Params:', params);
+  console.log('Edit Diary Page - Diary ID:', diaryId);
+  console.log('Edit Diary Page - User:', user);
+  console.log('Edit Diary Page - Is Authenticated:', isAuthenticated);
+
   // Fetch diary data
   useEffect(() => {
     const fetchDiary = async () => {
@@ -31,11 +39,17 @@ export default function EditDiary() {
 
       try {
         setIsLoading(true);
+        console.log('Fetching diary for editing with ID:', diaryId);
+        
         const response = await axios.get(`/api/diaries/${diaryId}`);
+        console.log('Diary response for editing:', response.data);
+        
         setDiary(response.data);
         setError(null);
       } catch (err: any) {
-        console.error('Failed to fetch diary:', err);
+        console.error('Failed to fetch diary for editing:', err);
+        console.error('Error response:', err.response);
+        console.error('Error message:', err.message);
         setError(
           err.response?.data?.message || '日記の取得に失敗しました。もう一度お試しください。'
         );
@@ -56,8 +70,38 @@ export default function EditDiary() {
 
   // Redirect if not the owner
   useEffect(() => {
-    if (diary && user && diary.userId !== user.id) {
-      router.push('/dashboard');
+    if (diary && user && user._id) {
+      console.log('Checking ownership:');
+      console.log('Diary:', diary);
+      console.log('User:', user);
+      console.log('Diary userId type:', typeof diary.userId);
+      console.log('User _id type:', typeof user._id);
+      
+      // Convert both IDs to strings for comparison
+      const diaryUserId = typeof diary.userId === 'object' && diary.userId._id 
+        ? diary.userId._id.toString() 
+        : typeof diary.userId === 'string' 
+          ? diary.userId 
+          : diary.userId.toString();
+          
+      const userIdStr = user._id.toString();
+      
+      console.log('Diary userId (string):', diaryUserId);
+      console.log('User _id (string):', userIdStr);
+      console.log('Are they equal?', diaryUserId === userIdStr);
+      
+      if (diaryUserId !== userIdStr) {
+        console.log('Not the owner, redirecting to dashboard');
+        router.push('/dashboard');
+      } else {
+        console.log('User is the owner, staying on edit page');
+      }
+    } else {
+      console.log('User or diary not fully loaded yet, or user not authenticated');
+      if (diary && !user) {
+        console.log('Diary loaded but user not available, redirecting to login');
+        router.push('/login');
+      }
     }
   }, [diary, user, router]);
 

@@ -247,34 +247,55 @@ router.put(
     body('isPublic').optional().isBoolean().withMessage('isPublic must be a boolean value')
   ],
   async (req: Request, res: Response) => {
+    console.log('PUT /api/diaries/:id - Update diary request received');
+    console.log('Diary ID:', req.params.id);
+    console.log('Request body:', JSON.stringify(req.body));
+    console.log('User:', req.user);
+    console.log('Headers:', req.headers);
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
     try {
       // Find diary and check ownership
+      console.log('Finding diary with ID:', req.params.id);
       const diary = await Diary.findById(req.params.id);
 
       if (!diary) {
+        console.log('Diary not found');
         return res.status(404).json({ message: 'Diary not found' });
       }
 
+      console.log('Found diary:', diary);
+      
       // Check if diary.userId is an object with _id property or a direct ObjectId
       const diaryUserId = diary.userId._id ? diary.userId._id : diary.userId;
+      console.log('Diary userId:', diaryUserId);
+      console.log('User _id:', req.user._id);
+      console.log('Diary userId type:', typeof diaryUserId);
+      console.log('User _id type:', typeof req.user._id);
+      console.log('Diary userId string:', diaryUserId.toString());
+      console.log('User _id string:', req.user._id.toString());
       
       if (diaryUserId.toString() !== req.user._id.toString()) {
+        console.log('Not authorized to update this diary');
         return res.status(403).json({ message: 'Not authorized to update this diary' });
       }
 
       // Update fields
       const { title, content, isPublic } = req.body;
+      console.log('Updating diary with:', { title, content, isPublic });
       
       if (title !== undefined) diary.title = title;
       if (content !== undefined) diary.content = content;
       if (isPublic !== undefined) diary.isPublic = isPublic;
 
+      console.log('Saving updated diary');
       await diary.save();
+      console.log('Diary saved successfully');
 
       res.json({
         message: 'Diary updated successfully',

@@ -2,6 +2,7 @@ import React from 'react';
 import { Metadata, ResolvingMetadata } from 'next';
 import { notFound } from 'next/navigation';
 import SharedDiaryClient from '@/components/diary/SharedDiaryClient';
+import axios from 'axios';
 
 // Define the type for the page parameters
 type Props = {
@@ -12,21 +13,16 @@ type Props = {
 // Function to fetch diary data from the API
 async function getDiary(id: string) {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/diaries/share/${id}`, {
-      cache: 'no-store',
-    });
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/diaries/share/${id}`);
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        return { notFound: true };
-      }
-      if (response.status === 403) {
-        return { forbidden: true };
-      }
-      throw new Error('Failed to fetch diary');
+    if (response.status === 404) {
+      return { notFound: true };
     }
+    if (response.status === 403) {
+      return { forbidden: true };
+    }
+    return { diary: await response.data };
 
-    return { diary: await response.json() };
   } catch (error) {
     console.error('Error fetching diary:', error);
     return { error: 'Failed to fetch diary' };
@@ -39,8 +35,9 @@ export async function generateMetadata(
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   // Fetch diary data
-  const { diary, notFound: isNotFound, forbidden, error } = await getDiary(params.id);
-  
+  const { id } = await params
+  const { diary, notFound: isNotFound, forbidden, error } = await getDiary(id);
+
   // If diary not found or forbidden, return default metadata
   if (isNotFound || forbidden || error || !diary) {
     return {
@@ -91,17 +88,18 @@ export async function generateMetadata(
 
 // Main page component
 export default async function SharedDiaryPage({ params }: Props) {
-  const { diary, notFound: isNotFound, forbidden, error } = await getDiary(params.id);
-  
+  const { id } = await params
+  const { diary, notFound: isNotFound, forbidden, error } = await getDiary(id);
+
   // Handle errors
   if (isNotFound) {
     notFound();
   }
 
   // Pass the data to the client component
-  return <SharedDiaryClient 
-    initialData={diary} 
-    error={forbidden ? 'この日記は非公開です。' : error} 
-    diaryId={params.id} 
+  return <SharedDiaryClient
+    initialData={diary}
+    error={forbidden ? 'この日記は非公開です。' : error ?? ""}
+    diaryId={id}
   />;
 }

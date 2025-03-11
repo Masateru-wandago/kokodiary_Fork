@@ -37,6 +37,9 @@ module.exports = {
         sans: ['Inter', 'sans-serif'],
         mono: ['Fira Code', 'monospace'],
       },
+      gridTemplateColumns: {
+        '52': 'repeat(52, minmax(0, 1fr))',
+      },
     },
   },
   plugins: [],

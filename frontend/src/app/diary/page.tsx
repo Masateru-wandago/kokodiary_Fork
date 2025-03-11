@@ -3,10 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { FiPlus } from 'react-icons/fi';
+import { FiPlus, FiShare2 } from 'react-icons/fi';
 import { useAuth } from '@/context/AuthContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import DiaryList from '@/components/diary/DiaryList';
+import SearchBar from '@/components/dashboard/SearchBar';
 
 interface Diary {
   _id: string;
@@ -70,6 +71,20 @@ export default function MyDiaries() {
     }
   };
 
+  const handleShare = async (id: string) => {
+    try {
+      // Generate share link (or get it from server)
+      const shareUrl = `${window.location.origin}/share/${id}`;
+      
+      // Copy to clipboard
+      await navigator.clipboard.writeText(shareUrl);
+      alert('シェアリンクをコピーしました。');
+    } catch (err) {
+      console.error('Failed to share diary:', err);
+      alert('シェアリンクの作成に失敗しました。');
+    }
+  };
+
   if (!isAuthenticated) {
     return null; // Will redirect in useEffect
   }
@@ -87,6 +102,10 @@ export default function MyDiaries() {
             新規作成
           </button>
         </div>
+        
+        
+        {/* Search Bar */}
+        <SearchBar />
 
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
@@ -109,7 +128,7 @@ export default function MyDiaries() {
             </button>
           </div>
         ) : (
-          <DiaryList diaries={diaries} onDelete={handleDelete} />
+          <DiaryList diaries={diaries} onDelete={handleDelete} onShare={handleShare} />
         )}
       </div>
     </DashboardLayout>

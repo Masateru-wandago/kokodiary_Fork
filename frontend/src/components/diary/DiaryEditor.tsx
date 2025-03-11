@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { FiEye, FiEyeOff, FiSave, FiX } from 'react-icons/fi';
+import { FiEye, FiEyeOff, FiSave, FiX, FiCalendar } from 'react-icons/fi';
 import MarkdownPreview from './MarkdownPreview';
 
 interface DiaryEditorProps {
@@ -56,24 +56,61 @@ const DiaryEditor: React.FC<DiaryEditorProps> = ({
     try {
       if (isEditing && diaryId) {
         // Update existing diary
-        await axios.put(`/api/diaries/${diaryId}`, {
-          title,
-          content,
-          isPublic,
-        });
+        console.log('Updating diary with ID:', diaryId);
+        console.log('Update payload:', { title, content, isPublic });
+        
+        try {
+          // Log the full URL being used
+          const url = `/api/diaries/${diaryId}`;
+          console.log('Making PUT request to URL:', url);
+          console.log('Authorization header:', axios.defaults.headers.common['Authorization'] ? 'Present' : 'Not present');
+          
+          // Make the request with explicit headers
+          const response = await axios({
+            method: 'put',
+            url: url,
+            data: {
+              title,
+              content,
+              isPublic,
+            },
+            headers: {
+              'Content-Type': 'application/json',
+              // Include Authorization header from axios defaults
+            }
+          });
+          
+          console.log('Update diary response:', response.data);
+          
+          // Redirect to dashboard on success
+          router.push('/dashboard');
+        } catch (updateErr: any) {
+          console.error('Update diary error details:', updateErr);
+          console.error('Update error response:', updateErr.response?.data);
+          console.error('Update error status:', updateErr.response?.status);
+          console.error('Update error headers:', updateErr.response?.headers);
+          console.error('Update error config:', updateErr.config);
+          throw updateErr;
+        }
       } else {
         // Create new diary
-        await axios.post('/api/diaries', {
+        console.log('Creating new diary');
+        console.log('Create payload:', { title, content, isPublic });
+        
+        const response = await axios.post('/api/diaries', {
           title,
           content,
           isPublic,
         });
+        console.log('Create diary response:', response.data);
+        
+        // Redirect to dashboard on success
+        router.push('/dashboard');
       }
-
-      // Redirect to dashboard on success
-      router.push('/dashboard');
     } catch (err: any) {
-      console.error('Failed to save diary:', err);
+      console.error('Failed to save diary details:', err);
+      console.error('Error response:', err.response);
+      console.error('Error message:', err.message);
       setError(
         err.response?.data?.message || '日記の保存に失敗しました。もう一度お試しください。'
       );
@@ -108,6 +145,24 @@ const DiaryEditor: React.FC<DiaryEditorProps> = ({
     }, 0);
   };
 
+  const insertCurrentDate = () => {
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).replace(/\//g, '-');
+    
+    setTitle(current => {
+      // If title already has date, replace it, otherwise prepend date
+      const dateRegex = /^\d{4}-\d{2}-\d{2}/;
+      if (dateRegex.test(current)) {
+        return `${formattedDate}${current.replace(dateRegex, '')}`;
+      }
+      return `${formattedDate} ${current.trim()}`;
+    });
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 shadow sm:rounded-lg overflow-hidden">
       <div className="px-4 py-5 sm:p-6">
@@ -123,9 +178,19 @@ const DiaryEditor: React.FC<DiaryEditorProps> = ({
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <div>
-            <label htmlFor="diary-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              タイトル
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label htmlFor="diary-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                タイトル
+              </label>
+              <button
+                type="button"
+                onClick={insertCurrentDate}
+                className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 dark:text-primary-100 dark:bg-primary-800 dark:hover:bg-primary-700"
+              >
+                <FiCalendar className="mr-1 h-3 w-3" />
+                今日の日付を挿入
+              </button>
+            </div>
             <input
               type="text"
               id="diary-title"

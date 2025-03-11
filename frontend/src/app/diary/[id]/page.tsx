@@ -49,11 +49,18 @@ export default function DiaryView() {
 
       try {
         setIsLoading(true);
+        console.log('Fetching diary with ID:', diaryId);
+        
         const response = await axios.get(`/api/diaries/${diaryId}`);
+        console.log('Diary response:', response.data);
+        
         setDiary(response.data);
         setError(null);
       } catch (err: any) {
-        console.error('Failed to fetch diary:', err);
+        console.error('Failed to fetch diary details:', err);
+        console.error('Error response:', err.response);
+        console.error('Error message:', err.message);
+        
         if (err.response?.status === 401 || err.response?.status === 403) {
           // Authentication or authorization error
           setError('この日記を閲覧する権限がありません。');
@@ -107,10 +114,14 @@ export default function DiaryView() {
     }
 
     try {
+      console.log('Deleting diary with ID:', diaryId);
+      
       await axios.delete(`/api/diaries/${diaryId}`);
       router.push('/dashboard');
     } catch (err: any) {
       console.error('Failed to delete diary:', err);
+      console.error('Error response:', err.response);
+      console.error('Error message:', err.message);
       alert('日記の削除に失敗しました。もう一度お試しください。');
     }
   };

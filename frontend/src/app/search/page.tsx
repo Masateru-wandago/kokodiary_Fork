@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { FiSearch } from 'react-icons/fi';
 import { useAuth } from '@/context/AuthContext';
@@ -18,6 +18,7 @@ interface Diary {
 
 export default function SearchDiaries() {
   const [searchQuery, setSearchQuery] = useState('');
+  const searchParams = useSearchParams();
   const [diaries, setDiaries] = useState<Diary[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -32,10 +33,18 @@ export default function SearchDiaries() {
     }
   }, [isAuthenticated, router]);
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!searchQuery.trim()) {
+  // Handle search query from URL
+  useEffect(() => {
+    const query = searchParams.get('q');
+    if (query) {
+      setSearchQuery(query);
+      handleSearchWithQuery(query);
+    }
+  }, [searchParams]);
+
+  // Function to handle search with a given query
+  const handleSearchWithQuery = async (query: string) => {
+    if (!query.trim()) {
       setError('検索キーワードを入力してください');
       return;
     }
@@ -43,7 +52,7 @@ export default function SearchDiaries() {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await axios.get(`/api/diaries/search?q=${encodeURIComponent(searchQuery)}`);
+      const response = await axios.get(`/api/diaries/search?q=${encodeURIComponent(query)}`);
       setDiaries(response.data);
       setHasSearched(true);
     } catch (err: any) {
@@ -52,6 +61,12 @@ export default function SearchDiaries() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Handle form submission
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSearchWithQuery(searchQuery);
   };
 
   const handleDelete = async (id: string) => {

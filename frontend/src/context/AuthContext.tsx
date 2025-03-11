@@ -73,15 +73,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const fetchUser = async (authToken: string) => {
     try {
       setIsLoading(true);
+      console.log('Fetching user with token:', authToken ? 'Token exists' : 'No token');
+      
       const response = await axios.get('/api/auth/me', {
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
       });
+      
+      console.log('User data response:', response.data);
       setUser(response.data.user);
       setError(null);
-    } catch (err) {
-      console.error('Failed to fetch user:', err);
+    } catch (err: any) {
+      console.error('Failed to fetch user details:', err);
+      console.error('Error response:', err.response);
+      console.error('Error message:', err.message);
       setUser(null);
       setToken(null);
       localStorage.removeItem('token');
@@ -94,10 +100,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string, redirectPath?: string) => {
     try {
       setIsLoading(true);
+      console.log('Login attempt with email:', email);
+      
       const response = await axios.post('/api/auth/login', {
         email,
         password,
       });
+      
+      console.log('Login response:', response.data);
       
       const { token: authToken, user: userData } = response.data;
       
@@ -109,7 +119,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Redirect to the specified path or dashboard if not provided
       router.push(redirectPath || '/dashboard');
     } catch (err: any) {
-      console.error('Login error:', err);
+      console.error('Login error details:', err);
+      console.error('Error response:', err.response);
+      console.error('Error message:', err.message);
       setError(err.response?.data?.message || 'Login failed. Please try again.');
       throw err;
     } finally {
@@ -120,11 +132,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (username: string, email: string, password: string) => {
     try {
       setIsLoading(true);
+      console.log('Registration attempt with email:', email);
+      
       const response = await axios.post('/api/auth/register', {
         username,
         email,
         password,
       });
+      
+      console.log('Registration response:', response.data);
       
       const { token: authToken, user: userData } = response.data;
       
@@ -135,7 +151,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       router.push('/dashboard');
     } catch (err: any) {
-      console.error('Registration error:', err);
+      console.error('Registration error details:', err);
+      console.error('Error response:', err.response);
+      console.error('Error message:', err.message);
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
       throw err;
     } finally {
