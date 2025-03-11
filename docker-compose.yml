@@ -1,6 +1,38 @@
 version: '3.8'
 
 services:
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: kokodiary-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:4000
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: kokodiary-backend
+    restart: always
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+    environment:
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/kokodiary?authSource=admin
+      - JWT_SECRET=your_jwt_secret
+      - NODE_ENV=production
+
   mongodb:
     image: mongo:latest
     container_name: kokodiary-mongodb
