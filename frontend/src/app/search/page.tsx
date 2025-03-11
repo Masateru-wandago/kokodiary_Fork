@@ -84,6 +84,20 @@ export default function SearchDiaries() {
     }
   };
 
+  const handleShare = (id: string) => {
+    const shareLink = `${window.location.origin}/share/${id}`;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(shareLink)
+      .then(() => {
+        alert('共有リンクがコピーされました');
+      })
+      .catch(err => {
+        console.error('Failed to copy share link:', err);
+        alert('共有リンクのコピーに失敗しました');
+      });
+  };
+
   if (!isAuthenticated) {
     return null; // Will redirect in useEffect
   }
@@ -138,7 +152,7 @@ export default function SearchDiaries() {
               <p className="mb-4 text-gray-600 dark:text-gray-300">
                 「{searchQuery}」の検索結果: {diaries.length}件
               </p>
-              <DiaryList diaries={diaries} onDelete={handleDelete} />
+              <DiaryList diaries={diaries} onDelete={handleDelete} onShare={handleShare} />
             </>
           )
         ) : (

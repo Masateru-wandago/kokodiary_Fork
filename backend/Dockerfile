@@ -24,7 +24,7 @@ RUN npm run build:backend
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs

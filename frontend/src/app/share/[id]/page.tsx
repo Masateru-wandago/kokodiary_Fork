@@ -35,7 +35,7 @@ export async function generateMetadata(
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   // Fetch diary data
-  const { id } = await params
+  const { id } = params
   const { diary, notFound: isNotFound, forbidden, error } = await getDiary(id);
 
   // If diary not found or forbidden, return default metadata
@@ -88,7 +88,7 @@ export async function generateMetadata(
 
 // Main page component
 export default async function SharedDiaryPage({ params }: Props) {
-  const { id } = await params
+  const { id } = params
   const { diary, notFound: isNotFound, forbidden, error } = await getDiary(id);
 
   // Handle errors
