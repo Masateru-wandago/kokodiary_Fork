@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { FiSearch } from 'react-icons/fi';
@@ -16,7 +16,7 @@ interface Diary {
   updatedAt: string;
 }
 
-export default function SearchDiaries() {
+function SearchDiariesContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const searchParams = useSearchParams();
   const [diaries, setDiaries] = useState<Diary[]>([]);
@@ -164,5 +164,22 @@ export default function SearchDiaries() {
         )}
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function SearchDiaries() {
+  return (
+    <Suspense fallback={
+      <DashboardLayout>
+        <div className="p-4 sm:p-6 md:p-8">
+          <h1 className="text-2xl font-bold mb-6">日記を検索</h1>
+          <div className="flex justify-center items-center h-64">
+            <p>読み込み中...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    }>
+      <SearchDiariesContent />
+    </Suspense>
   );
 }
