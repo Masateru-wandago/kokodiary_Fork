@@ -9,7 +9,7 @@ COPY package.json package-lock.json* ./
 COPY backend/package.json ./backend/
 
 # Install dependencies
-RUN npm ci
+RUN npm i
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -39,7 +39,7 @@ USER expressjs
 
 EXPOSE 4000
 
-ENV PORT 4000
+ENV PORT=4000
 
 # Start the application
 CMD ["node", "backend/dist/index.js"]
